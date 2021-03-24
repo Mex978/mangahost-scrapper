@@ -1,4 +1,5 @@
 import re
+import sys
 from time import sleep
 
 from bs4 import BeautifulSoup
@@ -14,6 +15,7 @@ def slugify(str):
 def scrap(mangas):
     help = "Mangahost crawler command"
     platform = "https://mangahostz.com/"
+    stdout = sys.stdout
 
     result = []
 
@@ -26,7 +28,7 @@ def scrap(mangas):
         manga_title = manga["title"]
         portuguese_chapters_count = manga["count"]
 
-        print(f"Current manga: {manga}")
+        stdout.write(f"Current manga: {manga}\n")
 
         response = http.get(f"{platform}manga/{slugify(manga_title)}")
 
@@ -41,7 +43,7 @@ def scrap(mangas):
         manga_info["chapters_count"] = len(chapter_item_divs)
 
         if not _has_new_chapter(portuguese_chapters_count, manga_info["chapters_count"]):
-            print(f"{manga} don't have any new chapters")
+            stdout.write(f"{manga} don't have any new chapters\n")
             continue
 
         limit = _find_chapter_interval(portuguese_chapters_count, manga_info["chapters_count"])
@@ -49,7 +51,7 @@ def scrap(mangas):
 
         for chapter_item_div in chapter_item_divs[limit:]:
             data = _find_chapter_info(chapter_item_div, manga)
-            print(f"Chapter: {data}")
+            stdout.write(f"Chapter: {data}\n")
 
             response = http.get(data["url"])
             content = BeautifulSoup(response.text, "html.parser")
