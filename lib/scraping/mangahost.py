@@ -1,6 +1,6 @@
 import re
 import sys
-from time import sleep
+from time import sleep, time
 
 from bs4 import BeautifulSoup
 from bs4.element import Tag
@@ -14,7 +14,7 @@ def slugify(str):
     return "-".join(str.lower().split(" "))
 
 
-def scrap(mangas):
+def scrap(mangas, init_time):
     help = "Mangahost crawler command"
     platform = "https://mangahostz.com/"
     stdout = sys.stdout
@@ -49,6 +49,10 @@ def scrap(mangas):
         limit = abs(manga_chapters_count - limit)
 
         for chapter_item_div in chapter_item_divs[limit:]:
+            if (time() - init_time) >= 530:
+                print(f"Timeout for {manga_title}")
+                return chapters_content
+
             data = _find_chapter_info(chapter_item_div, manga_title)
             stdout.write(f"Chapter: {data}\n")
 
