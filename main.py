@@ -17,7 +17,7 @@ def run(request):
             print(chapters)
 
             insert_manga_chapters.run(chapters)
-            if time() - init >= 530:
+            if time() - init >= 510:
                 call_gcf_again.call()
                 return "Continue execution"
 

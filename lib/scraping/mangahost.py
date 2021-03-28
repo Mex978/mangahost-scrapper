@@ -49,7 +49,7 @@ def scrap(mangas, init_time):
         limit = abs(manga_chapters_count - limit)
 
         for chapter_item_div in chapter_item_divs[limit:]:
-            if (time() - init_time) >= 530:
+            if (time() - init_time) >= 510:
                 print(f"Timeout for {manga_title}")
                 return chapters_content
 

@@ -7,6 +7,6 @@ def call():
         target_audience = config.GCF_URL
         print(target_audience)
 
-        requests.get(target_audience, timeout=0.001)
+        requests.post(target_audience, timeout=5)
     except:
         pass
