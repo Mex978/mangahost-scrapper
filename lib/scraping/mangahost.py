@@ -9,7 +9,7 @@ from lib.client.http import http
 
 
 def slugify(str):
-    str = str.replace("’", "")
+    str = str.replace("’", "").replace("!", "").replace("?", "")
 
     return "-".join(str.lower().split(" "))
 
@@ -22,54 +22,63 @@ def scrap(mangas, init_time):
     result = []
 
     for manga in mangas:
-        sleep(1)
-
-        chapters_content = []
-
-        manga_title = manga["title"]
-        portuguese_chapters_count = manga["count"]
-
-        stdout.write(f"Current manga: {manga_title}\n")
-
-        response = http.get(f"{platform}manga/{slugify(manga_title)}")
-        content = BeautifulSoup(response.text, "html.parser")
-
-        chapters_div = content.find("div", {"class": "chapters"})
-        chapter_item_divs = list(chapters_div.findChildren("div", recursive=False))
-        chapter_item_divs = _remove_duplicates(chapter_item_divs)
-        chapter_item_divs.reverse()
-
-        manga_chapters_count = len(chapter_item_divs)
-
-        if not _has_new_chapter(portuguese_chapters_count, manga_chapters_count):
-            stdout.write(f"{manga_title} don't have any new chapters\n")
-            continue
-
-        limit = _find_chapter_interval(portuguese_chapters_count, manga_chapters_count)
-        limit = abs(manga_chapters_count - limit)
-
-        for chapter_item_div in chapter_item_divs[limit:]:
-            if (time() - init_time) >= 510:
-                print(f"Timeout for {manga_title}")
-                return chapters_content
-
-            data = _find_chapter_info(chapter_item_div, manga_title)
-            stdout.write(f"Chapter: {data}\n")
-
-            response = http.get(data["url"])
-            content = BeautifulSoup(response.text, "html.parser")
-
-            data["images"] = _find_chapter_images(content)
-
-            del data["url"]
-
-            sleep(1)
-
-            chapters_content.append(data)
-
-        result += chapters_content
+        try:
+            chapters_content = _get_manga_chapters(stdout, platform, manga)
+            if chapters_content:
+                result += chapters_content
+        except Exception as e:
+            stdout.write(f"Error on {manga} - {e}")
 
     return result
+
+
+def _get_manga_chapters(stdout, platform, manga):
+    sleep(1)
+
+    chapters_content = []
+
+    manga_title = manga["title"]
+    portuguese_chapters_count = manga["count"]
+
+    stdout.write(f"Current manga: {manga_title}\n")
+
+    response = http.get(f"{platform}manga/{slugify(manga_title)}")
+    content = BeautifulSoup(response.text, "html.parser")
+
+    chapters_div = content.find("div", {"class": "chapters"})
+    chapter_item_divs = list(chapters_div.findChildren("div", recursive=False))
+    chapter_item_divs = _remove_duplicates(chapter_item_divs)
+    chapter_item_divs.reverse()
+
+    manga_chapters_count = len(chapter_item_divs)
+
+    if not _has_new_chapter(portuguese_chapters_count, manga_chapters_count):
+        stdout.write(f"{manga_title} don't have any new chapters\n")
+        return None
+
+    limit = _find_chapter_interval(portuguese_chapters_count, manga_chapters_count)
+    limit = abs(manga_chapters_count - limit)
+
+    for chapter_item_div in chapter_item_divs[limit:]:
+        if (time() - init_time) >= 510:
+            stdout.write(f"Timeout for {manga_title}")
+            return chapters_content
+
+        data = _find_chapter_info(chapter_item_div, manga_title)
+        stdout.write(f"Chapter: {data}\n")
+
+        response = http.get(data["url"])
+        content = BeautifulSoup(response.text, "html.parser")
+
+        data["images"] = _find_chapter_images(content)
+
+        del data["url"]
+
+        sleep(1)
+
+        chapters_content.append(data)
+
+    return chapters_content
 
 
 def _has_new_chapter(portuguese_chapters_count: int, chapters_count: int) -> bool:
