@@ -1,5 +1,6 @@
 import re
 import sys
+from lib import config
 from time import sleep, time
 
 from bs4 import BeautifulSoup
@@ -23,18 +24,17 @@ def scrap(mangas, init_time):
 
     for manga in mangas:
         try:
-            chapters_content = _get_manga_chapters(stdout, platform, manga)
+            chapters_content = _get_manga_chapters(stdout, platform, manga, init_time)
             if chapters_content:
                 result += chapters_content
         except Exception as e:
-            stdout.write(f"Error on {manga} - {e}")
+            manga_title = manga["title"]
+            stdout.write(f"# Error on {manga_title} - {e}\n")
 
     return result
 
 
-def _get_manga_chapters(stdout, platform, manga):
-    sleep(1)
-
+def _get_manga_chapters(stdout, platform, manga, init_time):
     chapters_content = []
 
     manga_title = manga["title"]
@@ -42,8 +42,13 @@ def _get_manga_chapters(stdout, platform, manga):
 
     stdout.write(f"Current manga: {manga_title}\n")
 
+    sleep(2)
     response = http.get(f"{platform}manga/{slugify(manga_title)}")
     content = BeautifulSoup(response.text, "html.parser")
+
+    manga_info = _get_manga_info(content)
+
+    print(manga)
 
     chapters_div = content.find("div", {"class": "chapters"})
     chapter_item_divs = list(chapters_div.findChildren("div", recursive=False))
@@ -54,6 +59,14 @@ def _get_manga_chapters(stdout, platform, manga):
 
     if not _has_new_chapter(portuguese_chapters_count, manga_chapters_count):
         stdout.write(f"{manga_title} don't have any new chapters\n")
+
+        http.patch(
+            config.MANGAS_URL + manga["id"] + "/",
+            data={
+                "chapters_count": portuguese_chapters_count,
+            },
+            headers={"Authorization": f"Token {config.TOKEN}"},
+        )
         return None
 
     limit = _find_chapter_interval(portuguese_chapters_count, manga_chapters_count)
@@ -67,6 +80,7 @@ def _get_manga_chapters(stdout, platform, manga):
         data = _find_chapter_info(chapter_item_div, manga_title)
         stdout.write(f"Chapter: {data}\n")
 
+        sleep(2)
         response = http.get(data["url"])
         content = BeautifulSoup(response.text, "html.parser")
 
@@ -74,9 +88,15 @@ def _get_manga_chapters(stdout, platform, manga):
 
         del data["url"]
 
-        sleep(1)
-
         chapters_content.append(data)
+
+    http.patch(
+        config.MANGAS_URL + manga["id"] + "/",
+        data={
+            "chapters_count": manga_chapters_count,
+        },
+        headers={"Authorization": f"Token {config.TOKEN}"},
+    )
 
     return chapters_content
 
@@ -126,3 +146,18 @@ def _remove_duplicates(items: list) -> list:
             _new_items.append(item)
 
     return _new_items
+
+
+def _get_manga_info(content: BeautifulSoup):
+    manga_info = {}
+
+    section = content.find("section", {"class": "clearfix margin-bottom"})
+
+    section = section if section is not None else content.find("section", {"class": "clearfix blocked margin-bottom"})
+
+    h4 = section.find("h4").text
+    chapters_count = int(h4.replace(")", "").split("(")[-1])
+
+    manga_info["chapters_count"] = chapters_count
+
+    return manga_info
