@@ -10,7 +10,7 @@ from lib.client.http import http
 
 
 def slugify(str):
-    str = str.replace("’", "").replace("!", "").replace("?", "")
+    str = str.replace("'", "").replace("’", "").replace("!", "").replace("?", "").replace(":", "").replace(",", "").replace("(", "").replace(")", "").replace("é", "e").replace("á", "a")
 
     return "-".join(str.lower().split(" "))
 
@@ -22,14 +22,20 @@ def scrap(mangas, init_time):
 
     result = []
 
-    for manga in mangas:
+    index = 0
+
+    while index < len(mangas):
+        manga = mangas[index]
+
         try:
             chapters_content = _get_manga_chapters(stdout, platform, manga, init_time)
             if chapters_content:
                 result += chapters_content
+            index += 1
         except Exception as e:
             manga_title = manga["title"]
             stdout.write(f"# Error on {manga_title} - {e}\n")
+            sleep(2)
 
     return result
 
@@ -48,8 +54,8 @@ def _get_manga_chapters(stdout, platform, manga, init_time):
 
     manga_info = _get_manga_info(content)
 
-    print(manga)
-
+    # print(manga)
+    #     
     chapters_div = content.find("div", {"class": "chapters"})
     chapter_item_divs = list(chapters_div.findChildren("div", recursive=False))
     chapter_item_divs = _remove_duplicates(chapter_item_divs)
@@ -73,9 +79,9 @@ def _get_manga_chapters(stdout, platform, manga, init_time):
     limit = abs(manga_chapters_count - limit)
 
     for chapter_item_div in chapter_item_divs[limit:]:
-        if (time() - init_time) >= 510:
-            stdout.write(f"Timeout for {manga_title}")
-            return chapters_content
+        # if (time() - init_time) >= 510:
+        #     stdout.write(f"Timeout for {manga_title}")
+        #     return chapters_content
 
         data = _find_chapter_info(chapter_item_div, manga_title)
         stdout.write(f"Chapter: {data}\n")
@@ -153,9 +159,13 @@ def _get_manga_info(content: BeautifulSoup):
 
     section = content.find("section", {"class": "clearfix margin-bottom"})
 
-    section = section if section is not None else content.find("section", {"class": "clearfix blocked margin-bottom"})
+    section = (
+        section
+        if section is not None
+        else content.find("section", {"class": "clearfix blocked margin-bottom"})
+    )
 
-    h4 = section.find("h4").text
+    h4 = section.find("h4", {"class": "heading-5 pull-left"}).text
     chapters_count = int(h4.replace(")", "").split("(")[-1])
 
     manga_info["chapters_count"] = chapters_count
