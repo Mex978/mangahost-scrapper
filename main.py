@@ -16,8 +16,11 @@ def run(request):
         chapters = mangahost.scrap([manga], init)
         if chapters:
             insert_manga_chapters.run(chapters)
-            if time() - init >= 510:
-                call_gcf_again.call()
-                return "Continue execution"
+            # if time() - init >= 510:
+            #     call_gcf_again.call()
+            #     return "Continue execution"
 
     return "Finished"
+
+
+run("apsodkaposkd")
