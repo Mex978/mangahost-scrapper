@@ -40,6 +40,7 @@ class Manga:
                 self.id,
                 self.portuguese_chapters_count,
             )
+            return
 
         limit = self._find_chapter_interval(chapters_count)
         limit = abs(chapters_count - limit)
@@ -57,7 +58,7 @@ class Manga:
         return self.chapters
 
     def _has_new_chapter(self, chapters_count: int) -> bool:
-        return self.portuguese_chapters_count > chapters_count
+        return self.portuguese_chapters_count < chapters_count
 
     def _find_chapter_interval(self, chapters_count: int) -> int:
         if self.portuguese_chapters_count == 0:

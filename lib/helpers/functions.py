@@ -3,18 +3,29 @@ import unidecode
 
 class Functions:
     @staticmethod
-    def slugify(value) -> str:
+    def slugify(value, special_to_space=False) -> str:
         value = unidecode.unidecode(value)
 
-        value = (
-            value.replace("'", "")
-            .replace("’", "")
-            .replace("!", "")
-            .replace("?", "")
-            .replace(":", "")
-            .replace(",", "")
-            .replace("(", "")
-            .replace(")", "")
-        )
+        if special_to_space:
+            value = (
+                value.replace("'", " ")
+                .replace("!", " ")
+                .replace("?", " ")
+                .replace("’", " ")
+                .replace(":", " ")
+                .replace(",", " ")
+                .replace("(", " ")
+                .replace(")", " ")
+            )
+        else:
+            value = (
+                value.replace("'", "")
+                .replace("!", "")
+                .replace("?", "")
+                .replace(":", "")
+                .replace(",", "")
+                .replace("(", "")
+                .replace(")", "")
+            )
 
         return "-".join(value.lower().split(" "))

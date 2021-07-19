@@ -19,7 +19,11 @@ class Mangayabu:
             _id = manga["id"]
             _title = manga["title"]
             _count = manga["count"]
-            _url = self._platform + "manga/" + Functions.slugify(_title)
+            _url = (
+                self._platform
+                + "manga/"
+                + Functions.slugify(_title, special_to_space=True)
+            )
 
             try:
                 self.logger.warning(f"Current manga: {_title}")
