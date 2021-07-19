@@ -22,7 +22,10 @@ def run(platform_type: config.Platforms):
             mangas = platform["mangas"]
 
             for manga in mangas:
-                response = http.get(mangas_url + manga["id"], headers={"Authorization": f"Token {token}"})
+                response = http.get(
+                    mangas_url + manga["id"],
+                    headers={"Authorization": f"Token {token}"},
+                )
 
                 chapters_result = response.json()["chapters"]
                 pt_chapters_result = [x for x in chapters_result if x["language"] == 1]

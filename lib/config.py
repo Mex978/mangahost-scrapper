@@ -1,3 +1,4 @@
+from logging import Logger
 import os
 from enum import Enum
 
@@ -9,7 +10,10 @@ MANGAS_URL = f"{BASE_URL}/api/v1/mangas/"
 PLATFORMS_URL = f"{BASE_URL}/api/v1/platform/"
 CREATE_CHAPTER_URL = f"{BASE_URL}/api/v1/create-mangachapter/"
 
+logger = Logger("scrapper")
+
 
 class Platforms(Enum):
     mangahosts = "mangahost"
     isekaiscan = "isekaiscan"
+    mangayabu = "mangayabu"

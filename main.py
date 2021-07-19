@@ -1,26 +1,42 @@
-from lib.scraping import mangahost
-from lib import get_mangas
-from lib import insert_manga_chapters
-from lib import call_gcf_again
-from time import time
+from logging import Logger
+from lib import config
+from lib.services.unifier_api_service import UnifierApiService
+from lib.scraping.mangayabu import mangayabu
+from lib.scraping.mangahost import mangahost
 from lib.config import Platforms
-import json
+from lib.client.http import http
 
 
-def run(request):
-    init = time()
+def run(request=None):
+    logger = config.logger
+    platforms = [Platforms.mangayabu, Platforms.mangahosts]
 
-    mangas = get_mangas.run(platform_type=Platforms.mangahosts)
+    unifierApiService = UnifierApiService(http)
 
-    for manga in mangas:
-        chapters = mangahost.scrap([manga], init)
-        if chapters:
-            insert_manga_chapters.run(chapters)
-            # if time() - init >= 510:
-            #     call_gcf_again.call()
-            #     return "Continue execution"
+    mangahostClient = mangahost.Mangahost()
+    mangayabuClient = mangayabu.Mangayabu()
+
+    for platform in platforms:
+        logger.warning(f"\n::> {platform} <::")
+        logger.warning(f"Fetching mangas for {platform.value}\n")
+
+        mangas = unifierApiService.getMangas(platform)
+
+        for manga in mangas:
+            chapters = (
+                mangayabuClient.scrap(manga)
+                if platform == Platforms.mangayabu
+                else mangahostClient.scrap(manga)
+            )
+
+            if chapters:
+                unifierApiService.insertChapter(chapters)
+
+                # if time() - init >= 510:
+                #     call_gcf_again.call()
+                #     return "Continue execution"
 
     return "Finished"
 
 
-run("apsodkaposkd")
+run()

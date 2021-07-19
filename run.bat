@@ -1,0 +1,1 @@
+"C:\Users\maxli\Desktop\test\env\Scripts\python" "C:\Users\maxli\Desktop\test\main.py"
