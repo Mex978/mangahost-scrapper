@@ -1,3 +1,4 @@
+import re
 from bs4 import BeautifulSoup
 
 from lib import config
@@ -46,8 +47,9 @@ class Manga:
         limit = abs(chapters_count - limit)
 
         for div in chapters_divs[limit:]:
-            capitulo = Chapter(div.a.text, div.a["href"], self.title)
-            self.chapters.append(capitulo.getJson())
+            if len(re.findall(r"\d+", div.a.text)) > 0:
+                capitulo = Chapter(div.a.text, div.a["href"], self.title)
+                self.chapters.append(capitulo.getJson())
 
         self.apiService.updateMangaChaptersCount(
             self.id,
