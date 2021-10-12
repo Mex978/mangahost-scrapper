@@ -1,1 +1,1 @@
-"C:\Users\maxli\Desktop\test\env\Scripts\python" "C:\Users\maxli\Desktop\test\main.py"
+"C:\Users\maxli\Desktop\mangahost-scrapper\env\Scripts\python" "C:\Users\maxli\Desktop\mangahost-scrapper\main.py"

@@ -27,10 +27,21 @@ class Chapter:
         self.soup = BeautifulSoup(self.request.text, "html.parser")
 
     def addImagensUrls(self):
-        images_div = self.soup.find("div", class_="image-navigator")
         self.images = []
 
-        for image in images_div.find_all("img"):
+        def is_chapter_image(element):
+            if (
+                element
+                and element.find(self.manga_title) != -1
+                and element.find("Capítulo") != -1
+            ):
+                return True
+
+            return False
+
+        imgs = self.soup.find_all("img", {"title": is_chapter_image})
+
+        for image in imgs:
             self.images.append(image.attrs["src"])
 
     def getImagensUrls(self):
@@ -49,4 +60,4 @@ class Chapter:
         }
 
     def show(self):
-        self.logger.warning("Adicionado: {capitulo}".format(capitulo=self.title))
+        self.logger.warning(f"Adicionado: {self.title}")
